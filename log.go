@@ -44,7 +44,7 @@ func (l *Logger) AddValue(v interface{}) *Logger {
 	return l
 }
 
-func (l *Logger) Emit(m Msg) {
+func (l *Logger) Handle(m Msg) {
 	for v := range l.values {
 		m.AddValue(v)
 	}
@@ -74,7 +74,7 @@ func (msg Msg) Add(key string, value interface{}) Msg {
 }
 
 func (msg Msg) Log(l *Logger) Msg {
-	l.Emit(msg)
+	l.Handle(msg)
 	return msg
 }
 
@@ -110,11 +110,11 @@ func (me *StreamHandler) Emit(msg Msg) {
 }
 
 func Printf(format string, a ...interface{}) {
-	Default.Emit(Fmsg(format, a...))
+	Default.Handle(Fmsg(format, a...))
 }
 
 func Print(v ...interface{}) {
-	Default.Emit(Msg{text: fmt.Sprint(v...)})
+	Default.Handle(Msg{text: fmt.Sprint(v...)})
 }
 
 func Call() Msg {
