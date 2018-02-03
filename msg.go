@@ -14,6 +14,12 @@ func Fmsg(format string, a ...interface{}) Msg {
 	}
 }
 
+func Str(s string) Msg {
+	return Msg{
+		text: s,
+	}
+}
+
 func (msg Msg) Add(key string, value interface{}) Msg {
 	if msg.fields == nil {
 		msg.fields = make(map[string][]interface{})
@@ -36,5 +42,12 @@ func (m Msg) AddValue(value interface{}) Msg {
 		m.values = make(map[interface{}]struct{})
 	}
 	m.values[value] = struct{}{}
+	return m
+}
+
+func (m Msg) AddValues(values ...interface{}) Msg {
+	for _, v := range values {
+		m = m.AddValue(v)
+	}
 	return m
 }
