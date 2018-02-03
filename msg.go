@@ -1,23 +1,31 @@
 package log
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+)
 
 type Msg struct {
-	fields map[string][]interface{}
-	values map[interface{}]struct{}
-	text   string
+	fields  map[string][]interface{}
+	values  map[interface{}]struct{}
+	text    string
+	callers [1]uintptr
 }
 
-func Fmsg(format string, a ...interface{}) Msg {
-	return Msg{
-		text: fmt.Sprintf(format, a...),
-	}
+func Fmsg(format string, a ...interface{}) (m Msg) {
+	m.text = fmt.Sprintf(format, a...)
+	m.setCallers(1)
+	return
 }
 
-func Str(s string) Msg {
-	return Msg{
-		text: s,
-	}
+func Str(s string) (m Msg) {
+	m.text = s
+	m.setCallers(1)
+	return
+}
+
+func (m *Msg) setCallers(skip int) {
+	runtime.Callers(skip+2, m.callers[:])
 }
 
 func (msg Msg) Add(key string, value interface{}) Msg {
