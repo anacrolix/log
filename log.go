@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"runtime"
 )
 
@@ -82,8 +83,19 @@ type StreamHandler struct {
 	Fmt ByteFormatter
 }
 
+func formatAttrs(values map[interface{}]struct{}, fields map[string][]interface{}) (ret map[interface{}][]interface{}) {
+	ret = make(map[interface{}][]interface{})
+	for v := range values {
+		ret[reflect.TypeOf(v)] = append(ret[reflect.TypeOf(v)], v)
+	}
+	for f, vs := range fields {
+		ret[f] = append(ret[f], vs...)
+	}
+	return
+}
+
 func LineFormatter(msg Msg) []byte {
-	ret := []byte(fmt.Sprintf("%s, %v, %v\n", msg.text, msg.values, msg.fields))
+	ret := []byte(fmt.Sprintf("%s, %v\n", msg.text, formatAttrs(msg.values, msg.fields)))
 	if ret[len(ret)-1] != '\n' {
 		ret = append(ret, '\n')
 	}
