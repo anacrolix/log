@@ -95,7 +95,7 @@ func formatAttrs(values map[interface{}]struct{}, fields map[string][]interface{
 }
 
 func LineFormatter(msg Msg) []byte {
-	ret := []byte(fmt.Sprintf("%s, %v\n", msg.text, formatAttrs(msg.values, msg.fields)))
+	ret := []byte(fmt.Sprintf("%s: %s, %v\n", humanPc(msg.callers[0]), msg.text, formatAttrs(msg.values, msg.fields)))
 	if ret[len(ret)-1] != '\n' {
 		ret = append(ret, '\n')
 	}

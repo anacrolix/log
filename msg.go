@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"path/filepath"
 	"runtime"
 )
 
@@ -58,4 +59,12 @@ func (m Msg) AddValues(values ...interface{}) Msg {
 		m = m.AddValue(v)
 	}
 	return m
+}
+
+func humanPc(pc uintptr) string {
+	if pc == 0 {
+		panic(pc)
+	}
+	f, _ := runtime.CallersFrames([]uintptr{pc}).Next()
+	return fmt.Sprintf("%s:%d", filepath.Base(f.File), f.Line)
 }
