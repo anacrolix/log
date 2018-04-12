@@ -6,6 +6,7 @@ import (
 	"runtime"
 )
 
+// maybe implement finalizer to ensure msgs are sunk
 type Msg struct {
 	fields  map[string][]interface{}
 	values  map[interface{}]struct{}
@@ -42,6 +43,7 @@ func (msg Msg) Add(key string, value interface{}) Msg {
 	return msg
 }
 
+// rename sink
 func (msg Msg) Log(l *Logger) Msg {
 	l.Handle(msg)
 	return msg

@@ -50,6 +50,7 @@ func (l *Logger) AddValue(v interface{}) *Logger {
 	return l
 }
 
+// rename Log to allow other implementers
 func (l *Logger) Handle(m Msg) {
 	for v := range l.values {
 		m.AddValue(v)
