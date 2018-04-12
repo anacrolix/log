@@ -107,11 +107,11 @@ func (me *StreamHandler) Emit(msg Msg) {
 }
 
 func Printf(format string, a ...interface{}) {
-	Default.Handle(Fmsg(format, a...))
+	Default.Handle(Fmsg(format, a...).Skip(1))
 }
 
 func Print(v ...interface{}) {
-	Default.Handle(Msg{text: fmt.Sprint(v...)})
+	Default.Handle(Str(fmt.Sprint(v...)).Skip(1))
 }
 
 func Call() Msg {

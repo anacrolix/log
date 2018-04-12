@@ -10,7 +10,7 @@ type Msg struct {
 	fields  map[string][]interface{}
 	values  map[interface{}]struct{}
 	text    string
-	callers [1]uintptr
+	callers [32]uintptr
 }
 
 func Fmsg(format string, a ...interface{}) (m Msg) {
@@ -27,6 +27,11 @@ func Str(s string) (m Msg) {
 
 func (m *Msg) setCallers(skip int) {
 	runtime.Callers(skip+2, m.callers[:])
+}
+
+func (m Msg) Skip(skip int) Msg {
+	copy(m.callers[:], m.callers[skip:])
+	return m
 }
 
 func (msg Msg) Add(key string, value interface{}) Msg {
