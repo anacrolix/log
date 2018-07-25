@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"sort"
 )
 
 var Default = new(Logger)
@@ -84,7 +85,7 @@ type StreamHandler struct {
 	Fmt ByteFormatter
 }
 
-func formatAttrs(values map[interface{}]struct{}, fields map[string][]interface{}) (ret map[interface{}][]interface{}) {
+func groupExtras(values map[interface{}]struct{}, fields map[string][]interface{}) (ret map[interface{}][]interface{}) {
 	ret = make(map[interface{}][]interface{})
 	for v := range values {
 		ret[reflect.TypeOf(v)] = append(ret[reflect.TypeOf(v)], v)
@@ -95,8 +96,35 @@ func formatAttrs(values map[interface{}]struct{}, fields map[string][]interface{
 	return
 }
 
+type extra struct {
+	Key    interface{}
+	Values []interface{}
+}
+
+func sortExtras(extras map[interface{}][]interface{}) (ret []extra) {
+	for k, v := range extras {
+		ret = append(ret, extra{k, v})
+	}
+	sort.Slice(ret, func(i, j int) bool {
+		return fmt.Sprint(ret[i].Key) < fmt.Sprint(ret[j].Key)
+	})
+	return
+}
+
 func LineFormatter(msg Msg) []byte {
-	ret := []byte(fmt.Sprintf("%s: %s, %v\n", humanPc(msg.callers[0]), msg.text, formatAttrs(msg.values, msg.fields)))
+	ret := []byte(fmt.Sprintf(
+		"%s: %s%s",
+		humanPc(msg.callers[0]),
+		msg.text,
+		func() string {
+			extras := groupExtras(msg.values, msg.fields)
+			if len(extras) == 0 {
+				return ""
+			} else {
+				return fmt.Sprintf(", %v", sortExtras(extras))
+			}
+		}(),
+	))
 	if ret[len(ret)-1] != '\n' {
 		ret = append(ret, '\n')
 	}
