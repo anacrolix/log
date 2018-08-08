@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"runtime"
 	"sort"
+	"time"
 )
 
 var Default = new(Logger)
@@ -113,7 +114,8 @@ func sortExtras(extras map[interface{}][]interface{}) (ret []extra) {
 
 func LineFormatter(msg Msg) []byte {
 	ret := []byte(fmt.Sprintf(
-		"%s: %s%s",
+		"%s %s: %s%s",
+		time.Now().Format("2006-01-02 15:04:05"),
 		humanPc(msg.callers[0]),
 		msg.text,
 		func() string {
