@@ -1,5 +1,7 @@
 package log
 
+import "fmt"
+
 type Logger struct {
 	hs      map[Handler]struct{}
 	values  map[interface{}]struct{}
@@ -54,4 +56,14 @@ func (l *Logger) AddFilter(f *Filter) *Logger {
 	}
 	l.filters[f] = struct{}{}
 	return l
+}
+
+// Helper for compatibility with "log".Logger.
+func (l *Logger) Printf(format string, a ...interface{}) {
+	l.Handle(Fmsg(format, a...).Skip(1))
+}
+
+// Helper for compatibility with "log".Logger.
+func (l *Logger) Print(v ...interface{}) {
+	l.Handle(Str(fmt.Sprint(v...)).Skip(1))
 }

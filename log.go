@@ -44,14 +44,6 @@ func sortExtras(extras map[interface{}][]interface{}) (ret []extra) {
 	return
 }
 
-func Printf(format string, a ...interface{}) {
-	Default.Handle(Fmsg(format, a...).Skip(1))
-}
-
-func Print(v ...interface{}) {
-	Default.Handle(Str(fmt.Sprint(v...)).Skip(1))
-}
-
 func Call() Msg {
 	var pc [1]uintptr
 	n := runtime.Callers(4, pc[:])
