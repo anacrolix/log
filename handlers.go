@@ -15,7 +15,7 @@ type StreamHandler struct {
 	Fmt ByteFormatter
 }
 
-func (me *StreamHandler) Emit(msg Msg) {
+func (me StreamHandler) Emit(msg Msg) {
 	me.W.Write(me.Fmt(msg))
 }
 
