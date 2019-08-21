@@ -18,6 +18,8 @@ func Fmsg(format string, a ...interface{}) Msg {
 	return newMsg(fmt.Sprintf(format, a...))
 }
 
+var Fstr = Fmsg
+
 func Str(s string) (m Msg) {
 	return newMsg(s)
 }
