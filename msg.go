@@ -4,68 +4,112 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+
+	"github.com/anacrolix/missinggo/iter"
 )
 
-// maybe implement finalizer to ensure msgs are sunk
 type Msg struct {
-	fields  map[string][]interface{}
-	values  map[interface{}]struct{}
-	text    string
-	callers [32]uintptr
+	MsgImpl
 }
 
-func Fmsg(format string, a ...interface{}) (m Msg) {
-	m.text = fmt.Sprintf(format, a...)
-	m.setCallers(1)
-	return
+type MsgImpl interface {
+	Text() string
+	Callers(skip int, pc []uintptr) int
+	Values(callback iter.Callback)
+}
+
+// maybe implement finalizer to ensure msgs are sunk
+type rootMsg struct {
+	text string
+}
+
+func (m rootMsg) Text() string {
+	return m.text
+}
+
+func (m rootMsg) Callers(skip int, pc []uintptr) int {
+	return runtime.Callers(skip+2, pc)
+}
+
+func (m rootMsg) Values(iter.Callback) {}
+
+func newMsgWithCallers(text string, skip int) Msg {
+	return Msg{rootMsg{text}}
+}
+
+func Fmsg(format string, a ...interface{}) Msg {
+	return newMsgWithCallers(fmt.Sprintf(format, a...), 1)
 }
 
 func Str(s string) (m Msg) {
-	m.text = s
-	m.setCallers(1)
-	return
+	return newMsgWithCallers(s, 1)
 }
 
-func (m *Msg) setCallers(skip int) {
-	runtime.Callers(skip+2, m.callers[:])
+type msgSkipCaller struct {
+	MsgImpl
+	skip int
+}
+
+func (me msgSkipCaller) Callers(skip int, pc []uintptr) int {
+	return me.MsgImpl.Callers(skip+1+me.skip, pc)
 }
 
 func (m Msg) Skip(skip int) Msg {
-	copy(m.callers[:], m.callers[skip:])
-	return m
+	return Msg{msgSkipCaller{m.MsgImpl, skip}}
 }
 
-func (msg Msg) Add(key string, value interface{}) Msg {
-	if msg.fields == nil {
-		msg.fields = make(map[string][]interface{})
-	}
-	msg.fields[key] = append(msg.fields[key], value)
-	return msg
+type item struct {
+	key, value interface{}
 }
 
 // rename sink
-func (msg Msg) Log(l *Logger) Msg {
-	l.Handle(msg)
+func (msg Msg) Log(l Logger) Msg {
+	l.Log(msg.Skip(1))
 	return msg
 }
 
-func (m Msg) Values() map[interface{}]struct{} {
-	return m.values
+type msgWithValues struct {
+	MsgImpl
+	values []interface{}
 }
 
-func (m Msg) AddValue(value interface{}) Msg {
-	if m.values == nil {
-		m.values = make(map[interface{}]struct{})
+func (me msgWithValues) Values(cb iter.Callback) {
+	for _, v := range me.values {
+		if !cb(v) {
+			return
+		}
 	}
-	m.values[value] = struct{}{}
-	return m
+	me.MsgImpl.Values(cb)
 }
 
-func (m Msg) AddValues(values ...interface{}) Msg {
-	for _, v := range values {
-		m = m.AddValue(v)
-	}
-	return m
+func (me Msg) WithValues(v ...interface{}) Msg {
+	return Msg{msgWithValues{me.MsgImpl, v}}
+}
+
+func (me Msg) AddValues(v ...interface{}) Msg {
+	return me.WithValues(v...)
+}
+
+func (me Msg) With(key, value interface{}) Msg {
+	return me.WithValues(item{key, value})
+}
+
+func (me Msg) Add(key, value interface{}) Msg {
+	return me.With(key, value)
+}
+
+func (me Msg) HasValue(v interface{}) (has bool) {
+	me.Values(func(i interface{}) bool {
+		if i == v {
+			has = true
+		}
+		return !has
+	})
+	return
+}
+
+func (me Msg) AddValue(v interface{}) Msg {
+	return me.AddValues(v)
 }
 
 func humanPc(pc uintptr) string {

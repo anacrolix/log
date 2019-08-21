@@ -6,35 +6,25 @@ import (
 	"time"
 )
 
-type Handler interface {
-	Emit(Msg)
-}
-
-type StreamHandler struct {
+type StreamLogger struct {
 	W   io.Writer
 	Fmt ByteFormatter
 }
 
-func (me StreamHandler) Emit(msg Msg) {
-	me.W.Write(me.Fmt(msg))
+func (me StreamLogger) Log(msg Msg) {
+	me.W.Write(me.Fmt(msg.Skip(1)))
 }
 
 type ByteFormatter func(Msg) []byte
 
 func LineFormatter(msg Msg) []byte {
+	var pc [1]uintptr
+	msg.Callers(1, pc[:])
 	ret := []byte(fmt.Sprintf(
-		"%s %s: %s%s",
+		"%s %s: %s",
 		time.Now().Format("2006-01-02 15:04:05"),
-		humanPc(msg.callers[0]),
-		msg.text,
-		func() string {
-			extras := groupExtras(msg.values, msg.fields)
-			if len(extras) == 0 {
-				return ""
-			} else {
-				return fmt.Sprintf(", %v", sortExtras(extras))
-			}
-		}(),
+		humanPc(pc[0]),
+		msg.Text(),
 	))
 	if ret[len(ret)-1] != '\n' {
 		ret = append(ret, '\n')

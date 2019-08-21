@@ -8,14 +8,10 @@ import (
 	"sort"
 )
 
-var Default = new(Logger)
-
-func init() {
-	Default.SetHandler(&StreamHandler{
-		W:   os.Stderr,
-		Fmt: LineFormatter,
-	})
-}
+var Default = Logger{StreamLogger{
+	W:   os.Stderr,
+	Fmt: LineFormatter,
+}}
 
 func groupExtras(values map[interface{}]struct{}, fields map[string][]interface{}) (ret map[interface{}][]interface{}) {
 	ret = make(map[interface{}][]interface{})
