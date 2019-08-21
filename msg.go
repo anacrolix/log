@@ -2,8 +2,6 @@ package log
 
 import (
 	"fmt"
-	"path/filepath"
-	"runtime"
 
 	"github.com/anacrolix/missinggo/iter"
 )
@@ -12,37 +10,16 @@ type Msg struct {
 	MsgImpl
 }
 
-type MsgImpl interface {
-	Text() string
-	Callers(skip int, pc []uintptr) int
-	Values(callback iter.Callback)
-}
-
-// maybe implement finalizer to ensure msgs are sunk
-type rootMsg struct {
-	text string
-}
-
-func (m rootMsg) Text() string {
-	return m.text
-}
-
-func (m rootMsg) Callers(skip int, pc []uintptr) int {
-	return runtime.Callers(skip+2, pc)
-}
-
-func (m rootMsg) Values(iter.Callback) {}
-
-func newMsgWithCallers(text string, skip int) Msg {
-	return Msg{rootMsg{text}}
+func newMsg(text string) Msg {
+	return Msg{rootMsgImpl{text}}
 }
 
 func Fmsg(format string, a ...interface{}) Msg {
-	return newMsgWithCallers(fmt.Sprintf(format, a...), 1)
+	return newMsg(fmt.Sprintf(format, a...))
 }
 
 func Str(s string) (m Msg) {
-	return newMsgWithCallers(s, 1)
+	return newMsg(s)
 }
 
 type msgSkipCaller struct {
@@ -110,12 +87,4 @@ func (me Msg) HasValue(v interface{}) (has bool) {
 
 func (me Msg) AddValue(v interface{}) Msg {
 	return me.AddValues(v)
-}
-
-func humanPc(pc uintptr) string {
-	if pc == 0 {
-		panic(pc)
-	}
-	f, _ := runtime.CallersFrames([]uintptr{pc}).Next()
-	return fmt.Sprintf("%s:%d", filepath.Base(f.File), f.Line)
 }

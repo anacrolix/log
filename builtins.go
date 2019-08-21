@@ -3,6 +3,8 @@ package log
 import (
 	"fmt"
 	"io"
+	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -30,4 +32,12 @@ func LineFormatter(msg Msg) []byte {
 		ret = append(ret, '\n')
 	}
 	return ret
+}
+
+func humanPc(pc uintptr) string {
+	if pc == 0 {
+		panic(pc)
+	}
+	f, _ := runtime.CallersFrames([]uintptr{pc}).Next()
+	return fmt.Sprintf("%s:%d", filepath.Base(f.File), f.Line)
 }
