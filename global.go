@@ -2,13 +2,20 @@ package log
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
-var Default = Logger{StreamLogger{
-	W:   os.Stderr,
-	Fmt: LineFormatter,
-}}
+var (
+	Default = Logger{StreamLogger{
+		W:   os.Stderr,
+		Fmt: LineFormatter,
+	}}
+	Discard = Logger{StreamLogger{
+		W:   ioutil.Discard,
+		Fmt: func(Msg) []byte { return nil },
+	}}
+)
 
 func Printf(format string, a ...interface{}) {
 	Default.Log(Fmsg(format, a...).Skip(1))
