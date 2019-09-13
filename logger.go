@@ -38,6 +38,13 @@ func (l Logger) WithFilter(f func(Msg) bool) Logger {
 	})}
 }
 
+// Returns a logger that for a given message propagates the result of `f` instead.
+func (l Logger) WithMap(f func(Msg) Msg) Logger {
+	return Logger{LoggerFunc(func(m Msg) {
+		l.Log(f(m))
+	})}
+}
+
 // Helper for compatibility with "log".Logger.
 func (l Logger) Printf(format string, a ...interface{}) {
 	l.Log(Fmsg(format, a...).Skip(1))
