@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/anacrolix/missinggo/iter"
 )
@@ -91,4 +92,17 @@ func (m Msg) HasValue(v interface{}) (has bool) {
 
 func (m Msg) AddValue(v interface{}) Msg {
 	return m.AddValues(v)
+}
+
+func (m Msg) GetValueByType(p interface{}) bool {
+	pve := reflect.ValueOf(p).Elem()
+	t := pve.Type()
+	return !iter.All(func(i interface{}) bool {
+		iv := reflect.ValueOf(i)
+		if iv.Type() == t {
+			pve.Set(iv)
+			return false
+		}
+		return true
+	}, m.Values)
 }
