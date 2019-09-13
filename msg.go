@@ -42,9 +42,9 @@ type item struct {
 }
 
 // rename sink
-func (msg Msg) Log(l Logger) Msg {
-	l.Log(msg.Skip(1))
-	return msg
+func (m Msg) Log(l Logger) Msg {
+	l.Log(m.Skip(1))
+	return m
 }
 
 type msgWithValues struct {
@@ -61,24 +61,26 @@ func (me msgWithValues) Values(cb iter.Callback) {
 	me.MsgImpl.Values(cb)
 }
 
-func (me Msg) WithValues(v ...interface{}) Msg {
-	return Msg{msgWithValues{me.MsgImpl, v}}
+// TODO: What ordering should be applied to the values here, per MsgImpl.Values. For now they're
+// traversed in order of the slice.
+func (m Msg) WithValues(v ...interface{}) Msg {
+	return Msg{msgWithValues{m.MsgImpl, v}}
 }
 
-func (me Msg) AddValues(v ...interface{}) Msg {
-	return me.WithValues(v...)
+func (m Msg) AddValues(v ...interface{}) Msg {
+	return m.WithValues(v...)
 }
 
-func (me Msg) With(key, value interface{}) Msg {
-	return me.WithValues(item{key, value})
+func (m Msg) With(key, value interface{}) Msg {
+	return m.WithValues(item{key, value})
 }
 
-func (me Msg) Add(key, value interface{}) Msg {
-	return me.With(key, value)
+func (m Msg) Add(key, value interface{}) Msg {
+	return m.With(key, value)
 }
 
-func (me Msg) HasValue(v interface{}) (has bool) {
-	me.Values(func(i interface{}) bool {
+func (m Msg) HasValue(v interface{}) (has bool) {
+	m.Values(func(i interface{}) bool {
 		if i == v {
 			has = true
 		}
@@ -87,6 +89,6 @@ func (me Msg) HasValue(v interface{}) (has bool) {
 	return
 }
 
-func (me Msg) AddValue(v interface{}) Msg {
-	return me.AddValues(v)
+func (m Msg) AddValue(v interface{}) Msg {
+	return m.AddValues(v)
 }
