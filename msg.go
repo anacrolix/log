@@ -106,3 +106,19 @@ func (m Msg) GetValueByType(p interface{}) bool {
 		return true
 	}, m.Values)
 }
+
+func (m Msg) WithText(f func(Msg) string) Msg {
+	return Msg{msgWithText{
+		m,
+		func() string { return f(m) },
+	}}
+}
+
+type msgWithText struct {
+	MsgImpl
+	text func() string
+}
+
+func (me msgWithText) Text() string {
+	return me.text()
+}

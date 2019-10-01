@@ -45,6 +45,12 @@ func (l Logger) WithMap(f func(Msg) Msg) Logger {
 	})}
 }
 
+func (l Logger) WithText(f func(Msg) string) Logger {
+	return Logger{LoggerFunc(func(m Msg) {
+		l.Log(m.WithText(f))
+	})}
+}
+
 // Helper for compatibility with "log".Logger.
 func (l Logger) Printf(format string, a ...interface{}) {
 	l.Log(Fmsg(format, a...).Skip(1))
