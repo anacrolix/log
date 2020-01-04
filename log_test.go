@@ -8,7 +8,7 @@ import (
 )
 
 func TestLogBadString(t *testing.T) {
-	Str("\xef\x00\xaa\x1ctest\x00test").AddValue("\x00").Log(Default())
+	Str("\xef\x00\xaa\x1ctest\x00test").AddValue("\x00").Log(Default)
 }
 
 type stringer struct {
