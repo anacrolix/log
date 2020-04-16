@@ -24,7 +24,7 @@ func LineFormatter(msg Msg) []byte {
 	msg.Callers(1, pc[:])
 	ret := []byte(fmt.Sprintf(
 		"%s %s: %s",
-		time.Now().Format("2006-01-02 15:04:05"),
+		time.Now().Format("2006-01-02T15:04:05-0700"),
 		humanPc(pc[0]),
 		msg.Text(),
 	))
