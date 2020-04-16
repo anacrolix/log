@@ -23,7 +23,7 @@ func LineFormatter(msg Msg) []byte {
 	var pc [1]uintptr
 	msg.Callers(1, pc[:])
 	ret := []byte(fmt.Sprintf(
-		"%s %5s %s: %s",
+		"%s %-5s %s: %s",
 		time.Now().Format("2006-01-02T15:04:05-0700"),
 		func() string {
 			if level, ok := msg.GetLevel(); ok {
