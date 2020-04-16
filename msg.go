@@ -86,7 +86,7 @@ func (m Msg) SetLevel(level Level) Msg {
 
 func (m Msg) GetByKey(key interface{}) (value interface{}, ok bool) {
 	m.Values(func(i interface{}) bool {
-		if keyValue, isKeyValue := i.(item); isKeyValue {
+		if keyValue, isKeyValue := i.(item); isKeyValue && keyValue.key == key {
 			value = keyValue.value
 			ok = true
 		}
