@@ -95,3 +95,7 @@ func (l Logger) WithContextText(s string) Logger {
 		return s + ": " + m.Text()
 	})
 }
+
+func (l Logger) IsZero() bool {
+	return l == Logger{}
+}
