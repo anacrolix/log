@@ -99,3 +99,9 @@ func (l Logger) WithContextText(s string) Logger {
 func (l Logger) IsZero() bool {
 	return l == Logger{}
 }
+
+func (l Logger) SkipCallers(skip int) Logger {
+	return l.WithMap(func(m Msg) Msg {
+		return m.Skip(skip)
+	})
+}
