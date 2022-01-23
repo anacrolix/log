@@ -1,6 +1,7 @@
 package log
 
 import (
+	"runtime"
 	"strconv"
 	"testing"
 
@@ -28,4 +29,16 @@ func TestValueStringNonLatin(t *testing.T) {
 	assert.Equal(t, q, s.String())
 	m := Str("").AddValue(q)
 	assert.True(t, m.HasValue(q))
+}
+
+func BenchmarkPcNames(b *testing.B) {
+	b.ReportAllocs()
+	var names []string
+	for i := 0; i < b.N; i++ {
+		var pc [1]uintptr
+		runtime.Callers(1, pc[:])
+		names = pcNames(pc[0], names[:0])
+		//b.Log(names[0], names[1])
+		//panic("hi")
+	}
 }
