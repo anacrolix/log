@@ -37,3 +37,9 @@ func Print(a ...interface{}) {
 	// TODO: There's no "Print" equivalent constructor for a Msg, and I don't know what I'd call it.
 	Str(fmt.Sprint(a...)).Skip(1).Log(Default)
 }
+
+func Println(a ...interface{}) {
+	Default.LazyLogDefaultLevel(func() Msg {
+		return Str(fmt.Sprintln(a...)).Skip(1)
+	})
+}

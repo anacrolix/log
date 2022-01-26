@@ -106,6 +106,10 @@ func (l Logger) LazyLog(level Level, f func() Msg) {
 	l.lazyLog(level, 1, f)
 }
 
+func (l Logger) LazyLogDefaultLevel(f func() Msg) {
+	l.LazyLog(l.defaultLevel, f)
+}
+
 func (l Logger) lazyLog(level Level, skip int, f func() Msg) {
 	if l.IsEnabledFor(level) {
 		l.handle(level, f().Skip(skip+1))
@@ -117,6 +121,9 @@ func (l Logger) handle(level Level, m Msg) {
 		Msg:   m.Skip(1),
 		Level: level,
 		Names: l.names,
+	}
+	if !l.nonZero {
+		panic(fmt.Sprintf("Logger uninitialized. names=%q", l.names))
 	}
 	for _, h := range l.Handlers {
 		h.Handle(r)
@@ -131,5 +138,11 @@ func (l Logger) WithNames(names ...string) Logger {
 func (l Logger) Levelf(level Level, format string, a ...interface{}) {
 	l.LazyLog(level, func() Msg {
 		return Fmsg(format, a...).Skip(1)
+	})
+}
+
+func (l Logger) Println(a ...interface{}) {
+	l.LazyLogDefaultLevel(func() Msg {
+		return Str(fmt.Sprintln(a...)).Skip(1)
 	})
 }
