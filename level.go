@@ -5,19 +5,18 @@ import (
 )
 
 type Level struct {
-	rank   int
-	logStr string
+	rank int
 }
 
 var levelKey = new(struct{})
 
 var (
-	NotSet   = Level{0, "UNSET"}
-	Debug    = Level{1, "DEBUG"}
-	Info     = Level{2, "INFO"}
-	Warning  = Level{3, "WARN"}
-	Error    = Level{4, "ERROR"}
-	Critical = Level{5, "CRIT"}
+	NotSet   = Level{0}
+	Debug    = Level{1}
+	Info     = Level{2}
+	Warning  = Level{3}
+	Error    = Level{4}
+	Critical = Level{5}
 	// Will this get special treatment? Not yet. Also disabled due to conflict with std log.Fatal.
 	//Fatal = Level{6, "FATAL"}
 )
@@ -25,17 +24,17 @@ var (
 func (l Level) LogString() string {
 	switch l.rank {
 	case NotSet.rank:
-		return "unset"
+		return "NIL"
 	case Debug.rank:
-		return "debug"
+		return "DBG"
 	case Info.rank:
-		return "info"
+		return "INF"
 	case Warning.rank:
-		return "warn"
+		return "WRN"
 	case Error.rank:
-		return "error"
+		return "ERR"
 	case Critical.rank:
-		return "crit"
+		return "CRT"
 	//case Fatal.rank:
 	//	return "fatal"
 	default:
