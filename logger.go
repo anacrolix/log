@@ -107,7 +107,7 @@ func (l Logger) LazyLog(level Level, f func() Msg) {
 }
 
 func (l Logger) LazyLogDefaultLevel(f func() Msg) {
-	l.LazyLog(l.defaultLevel, f)
+	l.lazyLog(l.defaultLevel, 1, f)
 }
 
 func (l Logger) lazyLog(level Level, skip int, f func() Msg) {
