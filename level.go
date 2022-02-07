@@ -11,18 +11,15 @@ type Level struct {
 	rank int
 }
 
-var levelKey = new(struct{})
-
 var (
-	Disabled = Level{-1} // This would be no filtering?
+	Never    = Level{-1} // A message at this level should never be logged.
 	NotSet   = Level{0}
 	Debug    = Level{1}
 	Info     = Level{2}
 	Warning  = Level{3}
 	Error    = Level{4}
 	Critical = Level{5}
-	// Will this get special treatment? Not yet. Also disabled due to conflict with std log.Fatal.
-	//Fatal = Level{6, "FATAL"}
+	disabled = Level{6} // It shouldn't be possible to define a message at this level.
 )
 
 func (l Level) isNotSet() bool {
@@ -43,8 +40,6 @@ func (l Level) LogString() string {
 		return "ERR"
 	case Critical.rank:
 		return "CRT"
-	//case Fatal.rank:
-	//	return "fatal"
 	default:
 		return strconv.FormatInt(int64(l.rank), 10)
 	}
@@ -61,7 +56,7 @@ var _ encoding.TextUnmarshaler = (*Level)(nil)
 
 func (l *Level) UnmarshalText(text []byte) error {
 	switch strings.ToLower(string(text)) {
-	case "nil", "notset", "unset", "all":
+	case "nil", "notset", "unset", "all", "*":
 		*l = NotSet
 	case "dbg", "debug":
 		*l = Debug
@@ -73,8 +68,6 @@ func (l *Level) UnmarshalText(text []byte) error {
 		*l = Error
 	case "crt", "critical", "crit":
 		*l = Critical
-	//case "FATAL":
-	//	*l = Fatal
 	default:
 		return fmt.Errorf("unknown log level: %q", text)
 	}

@@ -62,6 +62,8 @@ func (l loggerCore) LazyLogDefaultLevel(f func() Msg) {
 func (l loggerCore) lazyLog(level Level, skip int, f func() Msg) {
 	if l.IsEnabledFor(level) {
 		l.handle(level, f().Skip(skip+1))
+	} else {
+		//internalLogger.Levelf(Debug, "skipped logging %v for %q", level, l.names)
 	}
 }
 

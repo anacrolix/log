@@ -1,18 +1,20 @@
 package log
 
 import (
+	"fmt"
 	"os"
+	"strings"
 )
 
-var rules = []Rule{
-	//func(names []string) (level Level, matched bool) {
-	//	//log.Print(names)
-	//	return Info, true
-	//},
-	//ContainsAllNames([]string{"reader"}, Debug),
-}
+var rules []Rule
 
 type Rule func(names []string) (level Level, matched bool)
+
+func alwaysLevel(level Level) Rule {
+	return func(names []string) (Level, bool) {
+		return level, true
+	}
+}
 
 func stringSliceContains(s string, ss []string) bool {
 	for _, sss := range ss {
@@ -23,7 +25,7 @@ func stringSliceContains(s string, ss []string) bool {
 	return false
 }
 
-func ContainsAllNames(all []string, level Level) Rule {
+func containsAllNames(all []string, level Level) Rule {
 	return func(names []string) (_ Level, matched bool) {
 		for _, s := range all {
 			//log.Println(s, all, names)
@@ -35,20 +37,45 @@ func ContainsAllNames(all []string, level Level) Rule {
 	}
 }
 
-func parseEnvRules() (rules []Rule, err error) {
-	rulesStr := os.Getenv("GO_LOG")
-	level, ok, err := levelFromString(rulesStr)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
+func parseRuleString(s string) (_ Rule, ok bool, _ error) {
+	if s == "" {
 		return
 	}
-	return []Rule{
-		func(names []string) (_ Level, matched bool) {
-			return level, true
-		},
-	}, nil
+	ss := strings.SplitN(s, "=", 2)
+	level := NotSet
+	var names []string
+	if ss[0] != "*" {
+		names = []string{ss[0]}
+	}
+	if len(ss) > 1 {
+		var ok bool
+		var err error
+		level, ok, err = levelFromString(ss[1])
+		if !ok {
+			// blah= means disable the name, but just blah means to always include it
+			level = disabled
+		}
+		if err != nil {
+			return nil, false, fmt.Errorf("parsing level %q: %w", ss[1], err)
+		}
+	}
+	return containsAllNames(names, level), true, nil
+}
+
+func parseEnvRules() (rules []Rule, err error) {
+	rulesStr := os.Getenv("GO_LOG")
+	ruleStrs := strings.Split(rulesStr, ",")
+	for _, ruleStr := range ruleStrs {
+		rule, ok, err := parseRuleString(ruleStr)
+		if err != nil {
+			return nil, fmt.Errorf("parsing rule %q: %w", ruleStr, err)
+		}
+		if !ok {
+			continue
+		}
+		rules = append(rules, rule)
+	}
+	return
 }
 
 func levelFromString(s string) (level Level, ok bool, err error) {
