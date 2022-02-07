@@ -64,7 +64,9 @@ func (l Logger) WithDefaultLevel(level Level) Logger {
 }
 
 func (l Logger) FilterLevel(minLevel Level) Logger {
-	l.filterLevel = minLevel
+	if _, ok := levelFromRules(l.names); !ok {
+		l.filterLevel = minLevel
+	}
 	return l
 }
 
@@ -91,14 +93,6 @@ func (l Logger) SkipCallers(skip int) Logger {
 }
 
 func (l Logger) IsEnabledFor(level Level) bool {
-	for i := len(rules) - 1; i >= 0; i-- {
-		r := rules[i]
-		minLevel, matched := r(l.names)
-		if matched {
-			//log.Print(level, minLevel)
-			return !level.LessThan(minLevel)
-		}
-	}
 	return !level.LessThan(l.filterLevel)
 }
 
@@ -132,7 +126,7 @@ func (l Logger) handle(level Level, m Msg) {
 
 func (l Logger) WithNames(names ...string) Logger {
 	l.names = append(l.names, names...)
-	return l
+	return l.withFilterLevelFromRules()
 }
 
 func (l Logger) Levelf(level Level, format string, a ...interface{}) {
@@ -145,4 +139,12 @@ func (l Logger) Println(a ...interface{}) {
 	l.LazyLogDefaultLevel(func() Msg {
 		return Str(fmt.Sprintln(a...)).Skip(1)
 	})
+}
+
+func (l Logger) withFilterLevelFromRules() Logger {
+	level, ok := levelFromRules(l.names)
+	if ok {
+		l.filterLevel = level
+	}
+	return l
 }

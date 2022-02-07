@@ -11,11 +11,7 @@ var (
 		W:   os.Stderr,
 		Fmt: LineFormatter,
 	}
-	Default = Logger{
-		nonZero:     true,
-		filterLevel: Error,
-		Handlers:    []Handler{DefaultHandler},
-	}
+	Default        Logger // Inited after GO_LOG is parsed.
 	DiscardHandler = StreamHandler{
 		W:   ioutil.Discard,
 		Fmt: func(Record) []byte { return nil },
