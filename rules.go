@@ -37,11 +37,7 @@ func ContainsAllNames(all []string, level Level) Rule {
 
 func parseEnvRules() (rules []Rule, err error) {
 	rulesStr := os.Getenv("GO_LOG")
-	if rulesStr == "" {
-		return
-	}
-	var level Level
-	err = level.UnmarshalText([]byte(rulesStr))
+	level, err := levelFromString(rulesStr)
 	if err != nil {
 		return nil, err
 	}
@@ -52,17 +48,12 @@ func parseEnvRules() (rules []Rule, err error) {
 	}, nil
 }
 
-func init() {
-	var err error
-	rules, err = parseEnvRules()
-	if err != nil {
-		panic(err)
+func levelFromString(s string) (level Level, err error) {
+	if s == "" {
+		return
 	}
-	Default = Logger{
-		nonZero:     true,
-		filterLevel: Error,
-		Handlers:    []Handler{DefaultHandler},
-	}.withFilterLevelFromRules()
+	err = level.UnmarshalText([]byte(s))
+	return
 }
 
 func levelFromRules(names []string) (_ Level, ok bool) {
