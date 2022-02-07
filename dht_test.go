@@ -7,7 +7,7 @@ import (
 	"github.com/anacrolix/log"
 )
 
-// Mirrors usage seen for a particularly expensive logging callsite in anacrolix/dht.
+// Mirrors usage seen for a particularly expensive logging call-site in anacrolix/dht.
 func BenchmarkEmulateDhtServerReplyLogger(b *testing.B) {
 	l := log.Default.FilterLevel(log.Info).WithValues(&struct{}{}).WithContextText("some dht prefix").WithDefaultLevel(log.Debug)
 	makeMsg := func() log.Msg {
