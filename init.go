@@ -10,7 +10,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	Default = Logger{
+	Default = loggerCore{
 		nonZero:     true,
 		filterLevel: Error,
 		Handlers:    []Handler{DefaultHandler},
