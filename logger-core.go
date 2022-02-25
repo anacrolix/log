@@ -66,8 +66,8 @@ func (l loggerCore) lazyLog(level Level, skip int, f func() Msg) {
 		return
 	}
 	r := f().Skip(skip + 1)
-	for _, mm := range l.msgMaps {
-		r = mm(r)
+	for i := len(l.msgMaps) - 1; i >= 0; i-- {
+		r = l.msgMaps[i](r)
 	}
 	l.handle(level, r)
 }
