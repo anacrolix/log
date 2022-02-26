@@ -87,7 +87,9 @@ func (l loggerCore) handle(level Level, m Msg) {
 }
 
 func (l loggerCore) WithNames(names ...string) Logger {
-	l.names = append(l.names, names...)
+	// Avoid sharing after appending. This might not be enough because some formatters might add
+	// more elements concurrently, or names could be empty.
+	l.names = append(l.names[:len(l.names):len(l.names)], names...)
 	return l.withFilterLevelFromRules()
 }
 
