@@ -1,10 +1,12 @@
 package log
 
 import (
+	"errors"
 	"runtime"
 	"strconv"
 	"testing"
 
+	qt "github.com/frankban/quicktest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,4 +43,35 @@ func BenchmarkPcNames(b *testing.B) {
 		//b.Log(names[0], names[1])
 		//panic("hi")
 	}
+}
+
+type chanHandler struct {
+	r chan<- Record
+}
+
+func (c chanHandler) Handle(r Record) {
+	c.r <- r
+}
+
+func TestErrorLevelHandling(t *testing.T) {
+	c := qt.New(t)
+	l := NewLogger("test")
+	rs := make(chan Record)
+	// We could use SetHandlers here, but it's nice to see the output in verbose testing mode.
+	l.Handlers = append(l.Handlers, chanHandler{rs})
+	checkRecord := func(expectedLevel Level) {
+		r := <-rs
+		c.Check(r.Level, qt.Equals, expectedLevel, qt.Commentf("message received: %v", r.Msg))
+	}
+	testLogging := func(expectedLevel Level, logAction func()) {
+		go logAction()
+		checkRecord(expectedLevel)
+	}
+	testLogging(l.defaultLevel, func() { l.Printf("should have default level") })
+	testLogging(Info, func() { l.WithDefaultLevel(Info).Printf("should be info") })
+	testLogging(l.defaultLevel, func() { l.Levelf(NotSet, "should be starting level") })
+	testLogging(Info, func() { l.Levelf(Info, "should be info") })
+	err := errors.New("oh no something broke")
+	testLogging(l.defaultLevel, func() { l.Levelf(ErrorLevel(err), "error without level: %v", err) })
+	testLogging(Warning, func() { l.Levelf(ErrorLevel(WithLevel(Warning, err)), "error with level: %v", err) })
 }
