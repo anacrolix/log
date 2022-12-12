@@ -6,13 +6,15 @@ import (
 
 // loggerCore is the essential part of Logger.
 type loggerCore struct {
-	nonZero      bool
-	names        []string
-	values       []interface{}
+	nonZero bool
+	names   []string
+	values  []interface{}
+	// Propagate on NOTSET?
 	defaultLevel Level
-	filterLevel  Level
-	msgMaps      []func(Msg) Msg
-	Handlers     []Handler
+	// Use propagation on NOTSET.
+	filterLevel Level
+	msgMaps     []func(Msg) Msg
+	Handlers    []Handler
 }
 
 func (l loggerCore) asLogger() Logger {
