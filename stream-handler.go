@@ -33,13 +33,14 @@ func init() {
 	}
 }
 
+func getMsgPcName(msg Msg) string {
+	var pc [1]uintptr
+	msg.Callers(1, pc[:])
+	return pcName(pc[0])
+}
+
 func LineFormatter(msg Record) []byte {
 	names := msg.Names
-	if true || len(names) == 0 {
-		var pc [1]uintptr
-		msg.Callers(1, pc[:])
-		names = pcNames(pc[0], names)
-	}
 	ret := []byte(fmt.Sprintf(
 		"%s%s %s: %s",
 		time.Now().Format(timeFmt),
@@ -53,7 +54,7 @@ func LineFormatter(msg Record) []byte {
 	return ret
 }
 
-func pcNames(pc uintptr, names []string) []string {
+func pcName(pc uintptr) string {
 	if pc == 0 {
 		panic(pc)
 	}
@@ -69,5 +70,9 @@ func pcNames(pc uintptr, names []string) []string {
 		}
 	}()
 	_ = file
-	return append(names, fmt.Sprintf("%s:%v", funcName, line))
+	return fmt.Sprintf("%s:%v", funcName, line)
+}
+
+func pcNames(pc uintptr, names []string) []string {
+	return append(names, pcName(pc))
 }

@@ -55,7 +55,7 @@ func (c chanHandler) Handle(r Record) {
 
 func TestErrorLevelHandling(t *testing.T) {
 	c := qt.New(t)
-	l := NewLogger("test")
+	l := NewLogger("test").FilterLevel(NotSet)
 	rs := make(chan Record)
 	// We could use SetHandlers here, but it's nice to see the output in verbose testing mode.
 	l.Handlers = append(l.Handlers, chanHandler{rs})

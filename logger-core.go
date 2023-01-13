@@ -49,8 +49,12 @@ func (l loggerCore) IsZero() bool {
 	return !l.nonZero
 }
 
+// Deprecated. This should require a msg, since filtering includes the location a msg is created at.
+// That would require building a message before we can do checks, which means lazily constructing
+// the message but not the caller location.
 func (l loggerCore) IsEnabledFor(level Level) bool {
-	return !level.LessThan(l.filterLevel)
+	// TODO: Take a message?
+	return true
 }
 
 func (l loggerCore) LazyLog(level Level, f func() Msg) {
@@ -65,25 +69,28 @@ func (l loggerCore) lazyLog(level Level, skip int, f func() Msg) {
 	if level.isNotSet() {
 		level = l.defaultLevel
 	}
-	if !l.IsEnabledFor(level) {
-		// have a big sook
-		//internalLogger.Levelf(Debug, "skipped logging %v for %q", level, l.names)
+	r := f().Skip(skip + 1)
+	names := append(l.names, getMsgPcName(r))
+	if rulesLevel, ok := levelFromRules(names); ok {
+		if level.LessThan(rulesLevel) {
+			return
+		}
+	} else if level.LessThan(l.filterLevel) {
 		return
 	}
-	r := f().Skip(skip + 1)
 	for i := len(l.msgMaps) - 1; i >= 0; i-- {
 		r = l.msgMaps[i](r)
 	}
-	l.handle(level, r)
+	l.handle(level, r, names)
 }
 
-func (l loggerCore) handle(level Level, m Msg) {
+// Goes from an affirmative decision to log, to sending it to the handlers in the right form.
+func (l loggerCore) handle(level Level, m Msg, names []string) {
 	r := Record{
+		// Do we really need to be passing the full Msg caller context at this point?
 		Msg:   m.Skip(1),
 		Level: level,
-		// Add an extra slot for pcNames
-		Names: append(make([]string, 0, len(l.names)+1), l.names...),
-		//Names: l.names,
+		Names: names,
 	}
 	if !l.nonZero {
 		panic(fmt.Sprintf("Logger uninitialized. names=%q", l.names))
@@ -97,14 +104,6 @@ func (l loggerCore) WithNames(names ...string) Logger {
 	// Avoid sharing after appending. This might not be enough because some formatters might add
 	// more elements concurrently, or names could be empty.
 	l.names = append(l.names[:len(l.names):len(l.names)], names...)
-	return l.withFilterLevelFromRules()
-}
-
-func (l loggerCore) withFilterLevelFromRules() Logger {
-	level, ok := levelFromRules(l.names)
-	if ok {
-		l.filterLevel = level
-	}
 	return l.asLogger()
 }
 
