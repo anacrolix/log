@@ -38,11 +38,15 @@ func (l loggerCore) WithDefaultLevel(level Level) Logger {
 	return l.asLogger()
 }
 
-func (l loggerCore) FilterLevel(minLevel Level) Logger {
-	if _, ok := levelFromRules(l.names); !ok {
-		l.filterLevel = minLevel
-	}
+func (l loggerCore) WithFilterLevel(minLevel Level) Logger {
+	l.filterLevel = minLevel
 	return l.asLogger()
+}
+
+// Deprecated. Use WithFilterLevel. This method name is misleading and doesn't follow the convention
+// elsewhere.
+func (l loggerCore) FilterLevel(minLevel Level) Logger {
+	return l.WithFilterLevel(minLevel)
 }
 
 func (l loggerCore) IsZero() bool {
