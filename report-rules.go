@@ -1,7 +1,9 @@
 package log
 
 import (
+	"io"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/anacrolix/generics"
@@ -43,13 +45,21 @@ func (me *reportedNamesType) putReport(names []string) bool {
 	return putReportInner(&me.base, names)
 }
 
+var reportRulesLogger = log.New(os.Stderr, "anacrolix/log: ", 0)
+
+func init() {
+	if os.Getenv("GO_LOG_REPORT_RULES") == "" {
+		reportRulesLogger.SetOutput(io.Discard)
+	}
+}
+
 func reportLevelFromRules(level Level, ok bool, names []string) {
 	if !reportedNames.putReport(names) {
 		return
 	}
 	if !ok {
-		log.Printf("no rule matched for %q", names)
+		reportRulesLogger.Printf("no rule matched for %q", names)
 		return
 	}
-	log.Printf("got level %v for %q", level.LogString(), names)
+	reportRulesLogger.Printf("got level %v for %q", level.LogString(), names)
 }
