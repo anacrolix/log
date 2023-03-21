@@ -74,7 +74,7 @@ func (l loggerCore) lazyLog(level Level, skip int, f func() Msg) {
 		level = l.defaultLevel
 	}
 	r := f().Skip(skip + 1)
-	names := append(l.names, getMsgPcName(r))
+	names := append(l.names[:len(l.names):len(l.names)], getMsgPcName(r))
 	if rulesLevel, ok := levelFromRules(names); ok {
 		if level.LessThan(rulesLevel) {
 			return
