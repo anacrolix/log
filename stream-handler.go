@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 )
@@ -26,7 +27,7 @@ func init() {
 	var ok bool
 	timeFmt, ok = os.LookupEnv("GO_LOG_TIME_FMT")
 	if !ok {
-		timeFmt = "2006-01-02T15:04:05-0700"
+		timeFmt = "2006-01-02 15:04:05 -0700"
 	}
 	if timeFmt != "" {
 		timeFmt += " "
@@ -69,8 +70,7 @@ func pcName(pc uintptr) string {
 			return f.Function, f.File, f.Line
 		}
 	}()
-	_ = file
-	return fmt.Sprintf("%s:%v", funcName, line)
+	return fmt.Sprintf("%s %v:%v", funcName, filepath.Base(file), line)
 }
 
 func pcNames(pc uintptr, names []string) []string {
