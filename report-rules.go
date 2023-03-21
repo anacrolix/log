@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/anacrolix/generics"
+	g "github.com/anacrolix/generics"
 )
 
 type nameToAny struct {
@@ -29,7 +29,7 @@ func putReportInner(toAny *nameToAny, names []string) bool {
 		toAny.emptyCase = true
 		return true
 	}
-	generics.MakeMapIfNil(&toAny.children)
+	g.MakeMapIfNil(&toAny.children)
 	child, ok := toAny.children[names[0]]
 	if !ok {
 		child = new(nameToAny)
