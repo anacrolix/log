@@ -3,10 +3,8 @@ package log
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"runtime"
-	"time"
 )
 
 type StreamHandler struct {
@@ -21,19 +19,6 @@ func (me StreamHandler) Handle(r Record) {
 
 type ByteFormatter func(Record) []byte
 
-var timeFmt string
-
-func init() {
-	var ok bool
-	timeFmt, ok = os.LookupEnv("GO_LOG_TIME_FMT")
-	if !ok {
-		timeFmt = "2006-01-02 15:04:05 -0700"
-	}
-	if timeFmt != "" {
-		timeFmt += " "
-	}
-}
-
 func getMsgPcName(msg Msg) string {
 	var pc [1]uintptr
 	msg.Callers(1, pc[:])
@@ -43,8 +28,8 @@ func getMsgPcName(msg Msg) string {
 func LineFormatter(msg Record) []byte {
 	names := msg.Names
 	ret := []byte(fmt.Sprintf(
-		"%s%s %s: %s",
-		time.Now().Format(timeFmt),
+		"%s %s %s: %s",
+		DefaultTimeFormatter(),
 		msg.Level.LogString(),
 		names,
 		msg.Text(),
