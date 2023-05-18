@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"runtime"
 )
 
 type StreamHandler struct {
@@ -44,18 +43,8 @@ func pcName(pc uintptr) string {
 	if pc == 0 {
 		panic(pc)
 	}
-	funcName, file, line := func() (string, string, int) {
-		if false {
-			// This seems to result in one less allocation, but doesn't handle inlining?
-			func_ := runtime.FuncForPC(pc)
-			file, line := func_.FileLine(pc)
-			return func_.Name(), file, line
-		} else {
-			f, _ := runtime.CallersFrames([]uintptr{pc}).Next()
-			return f.Function, f.File, f.Line
-		}
-	}()
-	return fmt.Sprintf("%s %v:%v", funcName, filepath.Base(file), line)
+	loc := locFromPc(pc)
+	return fmt.Sprintf("%v:%v:%v", loc.Package, filepath.Base(loc.File), loc.Line)
 }
 
 func pcNames(pc uintptr, names []string) []string {
