@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"path/filepath"
 )
 
 // loggerCore is the essential part of Logger.
@@ -74,7 +75,12 @@ func (l loggerCore) lazyLog(level Level, skip int, f func() Msg) {
 		level = l.defaultLevel
 	}
 	r := f().Skip(skip + 1)
-	names := append(l.names[:len(l.names):len(l.names)], getMsgPcName(r))
+	msgLoc := getMsgLogLoc(r)
+	names := append(
+		l.names[:len(l.names):len(l.names)],
+		msgLoc.Package,
+		fmt.Sprintf("%v:%v", filepath.Base(msgLoc.File), msgLoc.Line),
+	)
 	if rulesLevel, ok := levelFromRules(names); ok {
 		if level.LessThan(rulesLevel) {
 			return

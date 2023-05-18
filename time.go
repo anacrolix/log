@@ -26,5 +26,5 @@ func init() {
 var started = time.Now()
 
 var TimeFormatSecondsSinceInit = func() string {
-	return fmt.Sprintf("%.9fs", time.Since(started).Seconds())
+	return fmt.Sprintf("%.3fs", time.Since(started).Seconds())
 }

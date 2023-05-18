@@ -29,3 +29,10 @@ func locFromPc(pc uintptr) Loc {
 		Line:     f.Line,
 	}
 }
+
+func getMsgLogLoc(msg Msg) Loc {
+	var pc [1]uintptr
+	msg.Callers(1, pc[:])
+	return locFromPc(pc[0])
+
+}

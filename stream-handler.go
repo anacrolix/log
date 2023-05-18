@@ -18,20 +18,13 @@ func (me StreamHandler) Handle(r Record) {
 
 type ByteFormatter func(Record) []byte
 
-func getMsgPcName(msg Msg) string {
-	var pc [1]uintptr
-	msg.Callers(1, pc[:])
-	return pcName(pc[0])
-}
-
 func LineFormatter(msg Record) []byte {
-	names := msg.Names
 	ret := []byte(fmt.Sprintf(
-		"%s %s %s: %s",
+		"[%s %s] %s %s",
 		DefaultTimeFormatter(),
 		msg.Level.LogString(),
-		names,
 		msg.Text(),
+		msg.Names,
 	))
 	if ret[len(ret)-1] != '\n' {
 		ret = append(ret, '\n')
