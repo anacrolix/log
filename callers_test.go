@@ -1,9 +1,11 @@
 package log
 
 import (
-	"github.com/anacrolix/log/internal"
-	qt "github.com/frankban/quicktest"
 	"testing"
+
+	qt "github.com/frankban/quicktest"
+
+	"github.com/anacrolix/log/internal"
 )
 
 var globalVarCaller = getSingleCallerPc(0)

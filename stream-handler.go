@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"io"
-	"path/filepath"
 )
 
 type StreamHandler struct {
@@ -30,16 +29,4 @@ func LineFormatter(msg Record) []byte {
 		ret = append(ret, '\n')
 	}
 	return ret
-}
-
-func pcName(pc uintptr) string {
-	if pc == 0 {
-		panic(pc)
-	}
-	loc := locFromPc(pc)
-	return fmt.Sprintf("%v:%v:%v", loc.Package, filepath.Base(loc.File), loc.Line)
-}
-
-func pcNames(pc uintptr, names []string) []string {
-	return append(names, pcName(pc))
 }
