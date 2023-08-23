@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"io"
 )
 
@@ -18,15 +17,24 @@ func (me StreamHandler) Handle(r Record) {
 type ByteFormatter func(Record) []byte
 
 func LineFormatter(msg Record) []byte {
-	ret := []byte(fmt.Sprintf(
-		"[%s %s] %s %s",
-		DefaultTimeFormatter(),
-		msg.Level.LogString(),
-		msg.Text(),
-		msg.Names,
-	))
-	if ret[len(ret)-1] != '\n' {
-		ret = append(ret, '\n')
+	b := []byte{'['}
+	beforeLen := len(b)
+	b = GetDefaultTimeAppendFormatter()(b)
+	if len(b) != beforeLen {
+		b = append(b, ' ')
 	}
-	return ret
+	b = append(b, msg.Level.LogString()...)
+	b = append(b, "] "...)
+	b = append(b, msg.Text()...)
+	b = append(b, " ["...)
+	b = append(b, msg.Names[0]...)
+	for _, name := range msg.Names[1:] {
+		b = append(b, ' ')
+		b = append(b, name...)
+	}
+	b = append(b, ']')
+	if b[len(b)-1] != '\n' {
+		b = append(b, '\n')
+	}
+	return b
 }
