@@ -20,6 +20,14 @@ func Fmsg(format string, a ...interface{}) Msg {
 	return newMsg(func() string { return fmt.Sprintf(format, a...) })
 }
 
+func Msgln(a ...interface{}) Msg {
+	return newMsg(func() string {
+		s := fmt.Sprintln(a...)
+		// Sprintln adds a final newline, but we add that ourselves deeper in the logging code.
+		return s[:len(s)-1]
+	})
+}
+
 var Fstr = Fmsg
 
 func Str(s string) (m Msg) {

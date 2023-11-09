@@ -36,6 +36,6 @@ func Print(a ...interface{}) {
 
 func Println(a ...interface{}) {
 	Default.LazyLogDefaultLevel(func() Msg {
-		return Str(fmt.Sprintln(a...)).Skip(1)
+		return Msgln(a...).Skip(1)
 	})
 }
