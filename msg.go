@@ -4,12 +4,13 @@ import (
 	"fmt"
 )
 
+// A wrapper around MsgImpl that provides some extra helpers to modify a Msg.
 type Msg struct {
 	MsgImpl
 }
 
-func (me Msg) String() string {
-	return me.Text()
+func (m Msg) String() string {
+	return m.Text()
 }
 
 func newMsg(text func() string) Msg {

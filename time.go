@@ -29,7 +29,7 @@ var timeFmt string
 
 func init() {
 	var ok bool
-	timeFmt, ok = os.LookupEnv("GO_LOG_TIME_FMT")
+	timeFmt, ok = os.LookupEnv(EnvTimeFormat)
 	if !ok {
 		timeFmt = "2006-01-02 15:04:05 -0700"
 	}
