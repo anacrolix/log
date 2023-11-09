@@ -2,7 +2,7 @@ package log
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 )
 
@@ -13,7 +13,7 @@ var (
 	}
 	Default        Logger // Inited after GO_LOG is parsed.
 	DiscardHandler = StreamHandler{
-		W:   ioutil.Discard,
+		W:   io.Discard,
 		Fmt: func(Record) []byte { return nil },
 	}
 )
