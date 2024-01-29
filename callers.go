@@ -23,14 +23,27 @@ type Loc struct {
 // This is the package returned for a caller frame that is in the main package for a binary.
 const mainPackageFrameImport = "main"
 
-// Reads the build info to get the true full import path for the main package.
-var mainPackagePath = sync.OnceValue(func() string {
-	info, ok := debug.ReadBuildInfo()
-	if ok {
-		return info.Path
+var (
+	mainPackagePath = ""
+	everRead        = false
+	l               = &sync.Mutex{}
+	// Reads the build info to get the true full import path for the main package.
+	getMainPackagePath = func() string {
+		l.Lock()
+		defer l.Unlock()
+		if everRead {
+			return mainPackagePath
+		}
+		everRead = true
+		info, ok := debug.ReadBuildInfo()
+		if ok {
+			mainPackagePath = info.Path
+			return info.Path
+		}
+		mainPackagePath = mainPackageFrameImport
+		return mainPackageFrameImport
 	}
-	return mainPackageFrameImport
-})
+)
 
 func locFromPc(pc uintptr) Loc {
 	f, _ := runtime.CallersFrames([]uintptr{pc}).Next()
@@ -38,7 +51,7 @@ func locFromPc(pc uintptr) Loc {
 	firstDot := strings.IndexByte(f.Function[lastSlash+1:], '.')
 	pkg := f.Function[:lastSlash+1+firstDot]
 	if pkg == mainPackageFrameImport {
-		pkg = mainPackagePath()
+		pkg = getMainPackagePath()
 	}
 	return Loc{
 		Package:  pkg,
