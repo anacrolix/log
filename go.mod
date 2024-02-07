@@ -1,6 +1,6 @@
 module github.com/anacrolix/log
 
-go 1.18
+go 1.19
 
 require (
 	github.com/anacrolix/generics v0.0.0-20230113004304-d6428d516633
