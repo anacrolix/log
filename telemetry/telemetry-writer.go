@@ -1,8 +1,9 @@
-package log
+package telemetry
 
 import (
 	"context"
 	"errors"
+	"github.com/anacrolix/log"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,16 +13,16 @@ import (
 	"time"
 )
 
-type TelemetryWriter struct {
+type Writer struct {
 	Context context.Context
 	Url     *url.URL
-	Logger  Logger
+	Logger  log.Logger
 	init    sync.Once
 	buf     chan []byte
 	retry   [][]byte
 }
 
-func (me *TelemetryWriter) writer() {
+func (me *Writer) writer() {
 	for {
 		wait := func() bool {
 			if strings.Contains(me.Url.Scheme, "ws") {
@@ -40,10 +41,10 @@ func (me *TelemetryWriter) writer() {
 	}
 }
 
-func (me *TelemetryWriter) websocket() (wait bool) {
+func (me *Writer) websocket() (wait bool) {
 	conn, _, err := websocket.Dial(me.Context, me.Url.String(), nil)
 	if err != nil {
-		me.Logger.Levelf(Error, "error dialing websocket: %v", err)
+		me.Logger.Levelf(log.Error, "error dialing websocket: %v", err)
 		return true
 	}
 	defer func() {
@@ -61,37 +62,37 @@ func (me *TelemetryWriter) websocket() (wait bool) {
 	return false
 }
 
-func (me *TelemetryWriter) streamPost() {
+func (me *Writer) streamPost() {
 	r, w := io.Pipe()
 	go me.payloadWriter(func(b []byte) error {
 		_, err := w.Write(b)
 		return err
 	})
-	me.Logger.Levelf(Debug, "starting post")
+	me.Logger.Levelf(log.Debug, "starting post")
 	resp, err := http.Post(me.Url.String(), "application/jsonl", r)
-	me.Logger.Levelf(Debug, "post returned")
+	me.Logger.Levelf(log.Debug, "post returned")
 	r.Close()
 	if err != nil {
-		me.Logger.Levelf(Error, "error posting: %s", err)
+		me.Logger.Levelf(log.Error, "error posting: %s", err)
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		me.Logger.Levelf(Error, "unexpected status code: %v", resp.StatusCode)
+		me.Logger.Levelf(log.Error, "unexpected status code: %v", resp.StatusCode)
 	}
 	resp.Body.Close()
 }
 
-func (me *TelemetryWriter) payloadWriter(w func(b []byte) error) {
+func (me *Writer) payloadWriter(w func(b []byte) error) {
 	for {
 		select {
 		case b, ok := <-me.buf:
 			if !ok {
 				return
 			}
-			me.Logger.Levelf(Debug, "writing %v byte payload", len(b))
+			me.Logger.Levelf(log.Debug, "writing %v byte payload", len(b))
 			err := w(b)
 			if err != nil {
-				me.Logger.Levelf(Debug, "error writing payload: %s", err)
+				me.Logger.Levelf(log.Debug, "error writing payload: %s", err)
 				me.retry = append(me.retry, b)
 				return
 			}
@@ -101,23 +102,23 @@ func (me *TelemetryWriter) payloadWriter(w func(b []byte) error) {
 	}
 }
 
-func (me *TelemetryWriter) lazyInit() {
+func (me *Writer) lazyInit() {
 	me.init.Do(func() {
 		if me.Logger.IsZero() {
-			me.Logger = Default
+			me.Logger = log.Default
 		}
 		me.buf = make(chan []byte, 256)
 		go me.writer()
 	})
 }
 
-func (me *TelemetryWriter) Write(p []byte) (n int, err error) {
+func (me *Writer) Write(p []byte) (n int, err error) {
 	me.lazyInit()
 	select {
 	case me.buf <- p:
 		return len(p), nil
 	default:
-		me.Logger.Levelf(Error, "payload lost")
+		me.Logger.Levelf(log.Error, "payload lost")
 		return 0, errors.New("payload lost")
 	}
 }
