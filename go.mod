@@ -6,6 +6,7 @@ require (
 	github.com/anacrolix/generics v0.0.0-20230113004304-d6428d516633
 	github.com/frankban/quicktest v1.14.4
 	github.com/stretchr/testify v1.8.1
+	nhooyr.io/websocket v1.8.11
 )
 
 require (
