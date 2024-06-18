@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"io"
 	"log/slog"
 	"time"
@@ -61,7 +62,7 @@ func (me *JsonHandler) Handle(r Record) {
 		anyNames = append(anyNames, name)
 	}
 	slogRecord.AddAttrs(slog.Any("names", r.Names))
-	err := me.SlogHandler.Handle(nil, slogRecord)
+	err := me.SlogHandler.Handle(context.Background(), slogRecord)
 	if err != nil {
 		panic(err)
 	}
