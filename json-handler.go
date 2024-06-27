@@ -26,29 +26,6 @@ func NewJsonHandler(w io.Writer) *JsonHandler {
 
 var _ Handler = (*JsonHandler)(nil)
 
-func toSlogLevel(level Level) (slog.Level, bool) {
-	switch level {
-	case Never:
-		return slog.LevelDebug - 1, false
-	case NotSet:
-		return slog.LevelWarn - 1, false
-	case Debug:
-		return slog.LevelDebug, true
-	case Info:
-		return slog.LevelInfo, true
-	case Warning:
-		return slog.LevelWarn, true
-	case Error:
-		return slog.LevelError, true
-	case Critical:
-		return slog.LevelError + 1, true
-	case disabled:
-		return slog.LevelDebug - 1, false
-	default:
-		panic(level)
-	}
-}
-
 func (me *JsonHandler) Handle(r Record) {
 	slogLevel, ok := toSlogLevel(r.Level)
 	if !ok {
