@@ -20,7 +20,7 @@ func toSlogLevel(level Level) (slog.Level, bool) {
 		return slog.LevelError, true
 	case Critical:
 		return slog.LevelError + 1, true
-	case disabled:
+	case Disabled:
 		return slog.LevelDebug - 1, false
 	default:
 		panic(level)
