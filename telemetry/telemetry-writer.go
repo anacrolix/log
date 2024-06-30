@@ -40,6 +40,11 @@ func (me *Writer) writer() {
 	defer me.wg.Done()
 	for {
 		if me.closed.IsSet() && len(me.buf) == 0 && len(me.retry) == 0 {
+			// We're requested to stop and there's nothing to send.
+			return
+		}
+		if me.ctx.Err() != nil {
+			// Closed and hard limit.
 			return
 		}
 		select {
@@ -55,7 +60,8 @@ func (me *Writer) writer() {
 				return true
 			}
 		}()
-		if me.ctx.Err() != nil {
+		if wait && me.closed.IsSet() {
+			// We just failed, and have been closed. Don't try again.
 			return
 		}
 		if wait {
