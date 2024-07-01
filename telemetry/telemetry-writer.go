@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/anacrolix/chansync"
+	"github.com/anacrolix/chansync/events"
 	"github.com/anacrolix/log"
 	"io"
 	"net/http"
@@ -24,34 +25,72 @@ type Writer struct {
 	RetryInterval time.Duration
 
 	// Lazy init guard.
-	init sync.Once
-	// This lets loggers not block.
-	buf    chan []byte
-	retry  [][]byte
+	init   sync.Once
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
+
+	mu sync.Mutex
+	// This lets loggers not block.
+	buf        chan []byte
+	retry      [][]byte
+	addPending chansync.BroadcastCond
 
 	closed      chansync.SetOnce
 	closeReason string
 }
 
+func (me *Writer) writerWaitCond() (
+	stop bool, // Stop writing
+	ready bool, // There are messages ready to go.
+	newMessages events.Signaled, // An event for new messages.
+) {
+	me.mu.Lock()
+	defer me.mu.Unlock()
+	if me.ctx.Err() != nil {
+		// Closed and hard limit.
+		stop = true
+		return
+	}
+	if len(me.buf) != 0 || len(me.retry) != 0 {
+		ready = true
+		return
+	}
+	if me.closed.IsSet() {
+		// We're requested to stop and there's nothing to send.
+		stop = true
+		return
+	}
+	// Return the cond chan for new messages.
+	newMessages = me.addPending.Signaled()
+	return
+}
+
+// Returns true if there are messages pending, and false if we should stop writing.
+func (me *Writer) writerWait() (ready bool) {
+	for {
+		stop, ready_, newMessages := me.writerWaitCond()
+		if stop {
+			return false
+		}
+		if ready_ {
+			return true
+		}
+		select {
+		case <-newMessages:
+		case <-me.closed.Done():
+		case <-me.ctx.Done():
+		}
+	}
+}
+
 func (me *Writer) writer() {
 	defer me.wg.Done()
 	for {
-		if me.closed.IsSet() && len(me.buf) == 0 && len(me.retry) == 0 {
-			// We're requested to stop and there's nothing to send.
+		if !me.writerWait() {
 			return
 		}
-		if me.ctx.Err() != nil {
-			// Closed and hard limit.
-			return
-		}
-		select {
-		case <-me.ctx.Done():
-			return
-		default:
-		}
+		me.Logger.Levelf(log.Debug, "connecting")
 		wait := func() bool {
 			if strings.Contains(me.Url.Scheme, "ws") {
 				return me.websocket()
@@ -182,6 +221,7 @@ func (me *Writer) payloadWriter(ctx context.Context, w func(b []byte) error) err
 			if err != nil {
 				me.Logger.Levelf(log.Debug, "error writing payload: %s", err)
 				me.retry = append(me.retry, b)
+				me.addPending.Broadcast()
 				return err
 			}
 		case <-ctx.Done():
@@ -210,6 +250,7 @@ func (me *Writer) Write(p []byte) (n int, err error) {
 	select {
 	// Wow, thanks for not reporting this with race detector, Go.
 	case me.buf <- slices.Clone(p):
+		me.addPending.Broadcast()
 		return len(p), nil
 	default:
 		me.Logger.Levelf(log.Error, "payload lost")
