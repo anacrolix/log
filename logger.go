@@ -89,5 +89,5 @@ func (l Logger) Println(a ...interface{}) {
 }
 
 func (l Logger) Slogger() *slog.Logger {
-	return slog.New(slogHandler{l})
+	return slog.New(slogHandler{l: l})
 }

@@ -7,7 +7,8 @@ import (
 )
 
 type slogHandler struct {
-	l Logger
+	l     Logger
+	attrs []slog.Attr
 }
 
 func (s slogHandler) Enabled(ctx context.Context, level slog.Level) bool {
@@ -16,13 +17,17 @@ func (s slogHandler) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (s slogHandler) Handle(ctx context.Context, record slog.Record) error {
+	if len(s.attrs) > 0 {
+		record = record.Clone()
+		record.AddAttrs(s.attrs...)
+	}
 	s.l.LazyLog(fromSlogLevel(record.Level), func() Msg { return Msg{slogMsg{record}} })
 	return nil
 }
 
 func (s slogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	//TODO implement me
-	panic("implement me")
+	s.attrs = append(s.attrs, attrs...)
+	return s
 }
 
 func (s slogHandler) WithGroup(name string) slog.Handler {
