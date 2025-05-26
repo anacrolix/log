@@ -2,14 +2,18 @@ package log
 
 import (
 	"context"
-	g "github.com/anacrolix/generics"
 	"log/slog"
+
+	g "github.com/anacrolix/generics"
 )
 
+// Wraps local Logger type as a slog.Handler.
 type slogHandler struct {
 	l     Logger
 	attrs []slog.Attr
 }
+
+var _ slog.Handler = slogHandler{}
 
 func (s slogHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	// See IsEnabledFor for reasons why we probably should just return true here.
@@ -38,6 +42,8 @@ func (s slogHandler) WithGroup(name string) slog.Handler {
 type slogMsg struct {
 	record slog.Record
 }
+
+var _ MsgImpl = slogMsg{}
 
 func (s slogMsg) SlogRecord() g.Option[slog.Record] {
 	return g.Some(s.record)
