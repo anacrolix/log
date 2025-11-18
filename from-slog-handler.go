@@ -18,6 +18,9 @@ func (me SlogHandlerAsHandler) Handle(r Record) {
 	if !ok {
 		panic(r.Level)
 	}
+	if !me.SlogHandler.Enabled(context.TODO(), slogLevel) {
+		return
+	}
 	var pc [1]uintptr
 	r.Callers(1, pc[:])
 	slogRecord := slog.NewRecord(time.Now(), slogLevel, r.Msg.String(), pc[0])
