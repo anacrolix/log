@@ -16,6 +16,8 @@ type SlogHandlerAsHandler struct {
 func (me SlogHandlerAsHandler) Handle(r Record) {
 	slogLevel, ok := toSlogLevel(r.Level)
 	if !ok {
+		// Might be a bit harsh to panic here. Seems to happen if you use default logging and a
+		// default level isn't set. We're afraid to lose messages and not be able to work out why.
 		panic(r.Level)
 	}
 	if !me.SlogHandler.Enabled(context.TODO(), slogLevel) {
