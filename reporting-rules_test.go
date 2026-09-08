@@ -3,21 +3,20 @@ package log
 import (
 	"testing"
 
-	qt "github.com/frankban/quicktest"
+	"github.com/go-quicktest/qt"
 )
 
 func TestRepeatReportedNames(t *testing.T) {
 	var a reportedNamesType
-	c := qt.New(t)
-	c.Assert(a.putReport([]string{"bunny"}), qt.IsTrue)
-	c.Assert(a.putReport([]string{"bunny"}), qt.IsFalse)
-	c.Assert(a.putReport([]string{"bunny", "foo", "foo"}), qt.IsTrue)
-	c.Assert(a.putReport([]string{"bunny", "foo", "foo"}), qt.IsFalse)
-	c.Assert(a.putReport([]string{"bunny", "foo"}), qt.IsTrue)
-	c.Assert(a.putReport([]string{"bunny", "foo", "bar"}), qt.IsTrue)
-	c.Assert(a.putReport([]string{"bunny", "foo", "bar"}), qt.IsFalse)
-	c.Assert(a.putReport([]string{"bunny", "foo"}), qt.IsFalse)
-	c.Assert(a.putReport([]string{"bunny"}), qt.IsFalse)
-	c.Assert(a.putReport(nil), qt.IsTrue)
-	c.Assert(a.putReport(nil), qt.IsFalse)
+	qt.Assert(t, qt.IsTrue(a.putReport([]string{"bunny"})))
+	qt.Assert(t, qt.IsFalse(a.putReport([]string{"bunny"})))
+	qt.Assert(t, qt.IsTrue(a.putReport([]string{"bunny", "foo", "foo"})))
+	qt.Assert(t, qt.IsFalse(a.putReport([]string{"bunny", "foo", "foo"})))
+	qt.Assert(t, qt.IsTrue(a.putReport([]string{"bunny", "foo"})))
+	qt.Assert(t, qt.IsTrue(a.putReport([]string{"bunny", "foo", "bar"})))
+	qt.Assert(t, qt.IsFalse(a.putReport([]string{"bunny", "foo", "bar"})))
+	qt.Assert(t, qt.IsFalse(a.putReport([]string{"bunny", "foo"})))
+	qt.Assert(t, qt.IsFalse(a.putReport([]string{"bunny"})))
+	qt.Assert(t, qt.IsTrue(a.putReport(nil)))
+	qt.Assert(t, qt.IsFalse(a.putReport(nil)))
 }
