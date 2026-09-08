@@ -3,7 +3,7 @@ package log
 import (
 	"testing"
 
-	qt "github.com/frankban/quicktest"
+	"github.com/go-quicktest/qt"
 
 	"github.com/anacrolix/log/internal"
 )
@@ -24,21 +24,20 @@ func (*methodCaller) ptrMethod() uintptr {
 	return getSingleCallerPc(0)
 }
 
-func checkPcPackage(c *qt.C, pc uintptr, expectedPkg string) {
+func checkPcPackage(t testing.TB, pc uintptr, expectedPkg string) {
 	loc := locFromPc(pc)
-	c.Log(loc.Function)
-	c.Check(loc.Package, qt.Equals, expectedPkg)
+	t.Log(loc.Function)
+	qt.Check(t, qt.Equals(loc.Package, expectedPkg))
 }
 
 func TestCallerLocs(t *testing.T) {
-	c := qt.New(t)
-	checkPcPackage(c, globalVarCaller, "github.com/anacrolix/log")
-	checkPcPackage(c, globalFuncCaller(), "github.com/anacrolix/log")
-	checkPcPackage(c, methodCaller{}.valueMethod(), "github.com/anacrolix/log")
-	checkPcPackage(c, (*methodCaller).ptrMethod(nil), "github.com/anacrolix/log")
+	checkPcPackage(t, globalVarCaller, "github.com/anacrolix/log")
+	checkPcPackage(t, globalFuncCaller(), "github.com/anacrolix/log")
+	checkPcPackage(t, methodCaller{}.valueMethod(), "github.com/anacrolix/log")
+	checkPcPackage(t, (*methodCaller).ptrMethod(nil), "github.com/anacrolix/log")
 	var nestedPkgPc uintptr
 	internal.Run(func() {
 		nestedPkgPc = getSingleCallerPc(1)
 	})
-	checkPcPackage(c, nestedPkgPc, "github.com/anacrolix/log/internal")
+	checkPcPackage(t, nestedPkgPc, "github.com/anacrolix/log/internal")
 }

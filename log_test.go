@@ -5,8 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	qt "github.com/frankban/quicktest"
-	"github.com/stretchr/testify/assert"
+	"github.com/go-quicktest/qt"
 )
 
 func TestLogBadString(t *testing.T) {
@@ -27,9 +26,9 @@ func TestValueStringNonLatin(t *testing.T) {
 		q = `"カワキヲアメク\n"`
 	)
 	s := stringer{u}
-	assert.Equal(t, q, s.String())
+	qt.Check(t, qt.Equals(s.String(), q))
 	m := Str("").AddValue(q)
-	assert.True(t, m.HasValue(q))
+	qt.Check(t, qt.IsTrue(m.HasValue(q)))
 }
 
 type chanHandler struct {
@@ -41,14 +40,13 @@ func (c chanHandler) Handle(r Record) {
 }
 
 func TestErrorLevelHandling(t *testing.T) {
-	c := qt.New(t)
 	l := NewLogger("test").FilterLevel(NotSet)
 	rs := make(chan Record)
 	// We could use SetHandlers here, but it's nice to see the output in verbose testing mode.
 	l.Handlers = append(l.Handlers, chanHandler{rs})
 	checkRecord := func(expectedLevel Level) {
 		r := <-rs
-		c.Check(r.Level, qt.Equals, expectedLevel, qt.Commentf("message received: %v", r.Msg))
+		qt.Check(t, qt.Equals(r.Level, expectedLevel), qt.Commentf("message received: %v", r.Msg))
 	}
 	testLogging := func(expectedLevel Level, logAction func()) {
 		go logAction()
